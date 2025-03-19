@@ -1,0 +1,3 @@
+-----VOTING RESULTS-----
+Candidate: james, Symbol: !, Votes: 1
+Candidate: peter, Symbol: @, Votes: 0
