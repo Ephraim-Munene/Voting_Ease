@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h> // For Windows-specific functions like text coloring
-#include <windows.h> // For Windows API functions like GetStdHandle
 
-#define MAX_C 11
+#define MAX_C 10  // Maximum number of candidates
 
 typedef struct Candidate {
     char name[50];
@@ -15,7 +13,7 @@ typedef struct Candidate {
 Candidate allCandidates[MAX_C];
 int candidateCount = 0;
 char symbols[10] = { '!', '@', '#', '$', '%', '^', '&', '*', '~', '+' };
-int symbolTaken[11];
+int symbolTaken[10];
 
 void fillCandidate(int);
 void displayMainMenu();
@@ -26,28 +24,34 @@ void handleFileError(FILE *file, const char *message);
 void printHeader(const char *title);
 void printFooter();
 
-// Function to set text color (Windows-specific)
+// Function to set text color (Linux-specific using ANSI escape codes)
 void setColor(int color) {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleTextAttribute(hConsole, color);
+    printf("\033[1;%dm", color);
 }
 
+// Main function
 int main() {
-    for (int i = 0; i < 11; i++) {
+    // Initialize symbol tracking array
+    for (int i = 0; i < 10; i++) {
         symbolTaken[i] = 0;
     }
 
-    printf("Enter the number of candidates: ");
+    // Get the number of candidates with validation
+    printf("Enter the number of candidates (1-10): ");
     scanf("%d", &candidateCount);
-    if (candidateCount >= MAX_C) {
-        printf("Number of candidates cannot be greater than 10.\n Terminating the program\n\n");
-        return 0;
+
+    while (candidateCount < 1 || candidateCount > MAX_C) {
+        printf("Error: Number of candidates must be between 1 and 10.\n");
+        printf("Enter the number of candidates again: ");
+        scanf("%d", &candidateCount);
     }
 
+    // Fill candidate details
     for (int i = 0; i < candidateCount; i++) {
         fillCandidate(i);
     }
 
+    // Main menu loop
     while (1) {
         displayMainMenu();
         int choice;
@@ -75,6 +79,7 @@ int main() {
     return 0;
 }
 
+// Function to fill candidate details
 void fillCandidate(int cNum) {
     printf("Available Symbols: \n");
     for (int j = 0; j < 10; j++) {
@@ -83,26 +88,31 @@ void fillCandidate(int cNum) {
         printf("%d  %c\n", j + 1, symbols[j]);
     }
 
-    int num = 0;
+    int num;
+    while (1) {
+        printf("\nEnter the symbol number of candidate %d: ", cNum + 1);
+        scanf("%d", &num);
 
-    printf("\nEnter the symbol number of candidate %d: ", cNum + 1);
-    scanf("%d", &num);
-
-    if (num <= 0 || num > 10 || symbolTaken[num - 1] == 1) {
-        printf("This Symbol is not available. Please choose from the available symbols\n");
-        fillCandidate(cNum);
-    } else {
-        symbolTaken[num - 1] = 1;
-        allCandidates[cNum].symbol = symbols[num - 1];
-        printf("Enter the name of candidate %d: ", cNum + 1);
-        scanf("%s", allCandidates[cNum].name);
-
-        allCandidates[cNum].votes = 0;
+        if (num > 0 && num <= 10 && symbolTaken[num - 1] == 0) {
+            symbolTaken[num - 1] = 1;
+            allCandidates[cNum].symbol = symbols[num - 1];
+            break;
+        } else {
+            printf("This Symbol is not available. Please choose from the available symbols\n");
+        }
     }
+
+    getchar(); // Clear newline from input buffer
+    printf("Enter the name of candidate %d: ", cNum + 1);
+    fgets(allCandidates[cNum].name, sizeof(allCandidates[cNum].name), stdin);
+    allCandidates[cNum].name[strcspn(allCandidates[cNum].name, "\n")] = 0; // Remove newline character
+
+    allCandidates[cNum].votes = 0;
 }
 
+// Function to display the main menu
 void displayMainMenu() {
-    system("cls"); // Clear the screen (Windows-specific)
+    system("clear"); // Clear the screen (Linux-specific)
     printHeader("MAIN MENU");
     printf("1. Vote for a Candidate\n");
     printf("2. View Results\n");
@@ -112,8 +122,9 @@ void displayMainMenu() {
     printf("Enter your choice: ");
 }
 
+// Function to handle voting
 void displayVotingInterface() {
-    system("cls");
+    system("clear");
     printHeader("VOTING INTERFACE");
 
     for (int j = 0; j < candidateCount; j++) {
@@ -131,12 +142,27 @@ void displayVotingInterface() {
     } else {
         printf("Invalid choice! Please try again.\n");
     }
-    getch(); // Wait for user input before returning to the main menu
+
+    printf("Press Enter to continue...");
+    while (getchar() != '\n'); // Clear buffer
+    getchar(); // Wait for user input
 }
 
+// Function to display results
 void displayResults() {
-    system("cls");
+    system("clear");
     printHeader("VOTING RESULTS");
+
+    // Sort candidates by votes (Descending)
+    for (int i = 0; i < candidateCount - 1; i++) {
+        for (int j = 0; j < candidateCount - i - 1; j++) {
+            if (allCandidates[j].votes < allCandidates[j + 1].votes) {
+                Candidate temp = allCandidates[j];
+                allCandidates[j] = allCandidates[j + 1];
+                allCandidates[j + 1] = temp;
+            }
+        }
+    }
 
     printf("%-20s %-10s %-10s\n", "Candidate", "Symbol", "Votes");
     printf("----------------------------------------\n");
@@ -145,9 +171,12 @@ void displayResults() {
     }
 
     printFooter();
-    getch(); // Wait for user input before returning to the main menu
+    printf("Press Enter to continue...");
+    while (getchar() != '\n'); // Clear buffer
+    getchar(); // Wait for user input
 }
 
+// Function to save results to a file
 void saveResultsToFile() {
     FILE *file = fopen("voting_results.txt", "w");
     if (!file) {
@@ -164,6 +193,7 @@ void saveResultsToFile() {
     fclose(file);
 }
 
+// Function to handle file errors
 void handleFileError(FILE *file, const char *message) {
     if (file) {
         fclose(file);
@@ -172,16 +202,18 @@ void handleFileError(FILE *file, const char *message) {
     exit(1);
 }
 
+// Function to print headers
 void printHeader(const char *title) {
-    setColor(14); // Yellow text
+    setColor(33); // Yellow text
     printf("========================================\n");
     printf("          %s\n", title);
     printf("========================================\n");
-    setColor(7); // Reset to default color
+    setColor(0); // Reset to default color
 }
 
+// Function to print footers
 void printFooter() {
-    setColor(14); // Yellow text
+    setColor(33); // Yellow text
     printf("========================================\n");
-    setColor(7); // Reset to default color
+    setColor(0); // Reset to default color
 }
