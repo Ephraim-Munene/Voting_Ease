@@ -29,6 +29,20 @@ void setColor(int color) {
     printf("\033[1;%dm", color);
 }
 
+// Function to get a valid integer input
+int getValidInteger(int min, int max) {
+    int num;
+    char input[100];
+
+    while (1) {
+        fgets(input, sizeof(input), stdin);
+        if (sscanf(input, "%d", &num) == 1 && num >= min && num <= max) {
+            return num;
+        }
+        printf("Invalid input! Please enter a number between %d and %d: ", min, max);
+    }
+}
+
 // Main function
 int main() {
     // Initialize symbol tracking array
@@ -38,13 +52,7 @@ int main() {
 
     // Get the number of candidates with validation
     printf("Enter the number of candidates (1-10): ");
-    scanf("%d", &candidateCount);
-
-    while (candidateCount < 1 || candidateCount > MAX_C) {
-        printf("Error: Number of candidates must be between 1 and 10.\n");
-        printf("Enter the number of candidates again: ");
-        scanf("%d", &candidateCount);
-    }
+    candidateCount = getValidInteger(1, MAX_C);
 
     // Fill candidate details
     for (int i = 0; i < candidateCount; i++) {
@@ -54,8 +62,7 @@ int main() {
     // Main menu loop
     while (1) {
         displayMainMenu();
-        int choice;
-        scanf("%d", &choice);
+        int choice = getValidInteger(1, 4);
 
         switch (choice) {
             case 1:
@@ -71,8 +78,6 @@ int main() {
             case 4:
                 printf("Exiting the program. Goodbye!\n");
                 exit(0);
-            default:
-                printf("Invalid choice! Please try again.\n");
         }
     }
 
@@ -91,18 +96,17 @@ void fillCandidate(int cNum) {
     int num;
     while (1) {
         printf("\nEnter the symbol number of candidate %d: ", cNum + 1);
-        scanf("%d", &num);
+        num = getValidInteger(1, 10);
 
-        if (num > 0 && num <= 10 && symbolTaken[num - 1] == 0) {
+        if (symbolTaken[num - 1] == 0) {
             symbolTaken[num - 1] = 1;
             allCandidates[cNum].symbol = symbols[num - 1];
             break;
         } else {
-            printf("This Symbol is not available. Please choose from the available symbols\n");
+            printf("This symbol is already taken. Please choose another.\n");
         }
     }
 
-    getchar(); // Clear newline from input buffer
     printf("Enter the name of candidate %d: ", cNum + 1);
     fgets(allCandidates[cNum].name, sizeof(allCandidates[cNum].name), stdin);
     allCandidates[cNum].name[strcspn(allCandidates[cNum].name, "\n")] = 0; // Remove newline character
@@ -133,19 +137,13 @@ void displayVotingInterface() {
 
     printFooter();
     printf("Enter your choice (1-%d): ", candidateCount);
-    int choice;
-    scanf("%d", &choice);
+    int choice = getValidInteger(1, candidateCount);
 
-    if (choice >= 1 && choice <= candidateCount) {
-        allCandidates[choice - 1].votes++;
-        printf("Thank you for voting!\n");
-    } else {
-        printf("Invalid choice! Please try again.\n");
-    }
+    allCandidates[choice - 1].votes++;
+    printf("Thank you for voting!\n");
 
     printf("Press Enter to continue...");
     while (getchar() != '\n'); // Clear buffer
-    getchar(); // Wait for user input
 }
 
 // Function to display results
@@ -173,7 +171,6 @@ void displayResults() {
     printFooter();
     printf("Press Enter to continue...");
     while (getchar() != '\n'); // Clear buffer
-    getchar(); // Wait for user input
 }
 
 // Function to save results to a file
