@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>  // For checking if characters are alphabetic
+#include <termios.h>
 #include <unistd.h>  // For sleep function
+#include <ctype.h>   // For isalpha function
+
 
 #define MAX_C 10  // Maximum number of candidates
+#define MAX_PASSWORD_LENGTH 50  // Max length of password
 
 typedef struct Candidate {
     char name[50];
@@ -23,7 +26,6 @@ const char *adminPassword = "123";
 void fillCandidate(int);
 void displayWelcomeScreen();
 void displayMainMenu();
-void displaySecondMenu();
 void displayAdminMenu();
 void displayVoterMenu();
 void displayPostVoteMenu();  // Function prototype added here
@@ -42,6 +44,7 @@ void displayNoCandidatesMessage();
 void clearInputBuffer();
 void adminSetupComplete();
 int isAlpha(const char *str);  // Helper function to check if input contains only letters
+void getPasswordWithAsterisks(char *password, int maxLength); // New function for password masking
 
 int main() {
     // Welcome screen and first interaction
@@ -88,10 +91,9 @@ void displayAdminMenu() {
     system("clear");
     printHeader("ADMIN LOGIN", "blue");
 
-    char inputPassword[20];
+    char inputPassword[MAX_PASSWORD_LENGTH];
     printf("Enter password: ");
-    scanf("%s", inputPassword);
-    clearInputBuffer();  // Clear the input buffer after reading password
+    getPasswordWithAsterisks(inputPassword, MAX_PASSWORD_LENGTH);  // Password input with masking
 
     if (strcmp(inputPassword, adminPassword) == 0) {
         printf("Password correct! Access granted.\n");
@@ -308,4 +310,33 @@ int isAlpha(const char *str) {
         }
     }
     return 1;  // All characters are alphabetic
+}
+
+void getPasswordWithAsterisks(char *password, int maxLength) {
+    struct termios oldt, newt;
+    int ch, i = 0;
+
+    // Get the current terminal settings
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~ECHO;  // Disable echo
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    // Read the password
+    while ((ch = getchar()) != '\n' && ch != EOF && i < maxLength - 1) {
+        if (ch == 127) {  // Backspace handling
+            if (i > 0) {
+                i--;
+                printf("\b \b");  // Move cursor back, overwrite with space, and move cursor back again
+            }
+        } else {
+            password[i++] = ch;
+            printf("*");  // Print asterisk for each character
+        }
+    }
+    password[i] = '\0';  // Null-terminate the string
+
+    // Restore the terminal settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    printf("\n");
 }
