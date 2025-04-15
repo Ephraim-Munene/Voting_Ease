@@ -1,8 +1,3 @@
 -----VOTING RESULTS-----
-<<<<<<< HEAD
-Candidate: Paul, Party: AIC, Votes: 1
-Candidate: Grace, Party: EAF, Votes: 2
-=======
-Candidate: Ryan, Party: ASS, Votes: 2
-Candidate: James, Party: BBL, Votes: 0
->>>>>>> 9fd968dd6e7e484e2465b9f23743f202e9f4322b
+Candidate: DC, Party: AC, Votes: 2
+Candidate: GC, Party: BC, Votes: 1
