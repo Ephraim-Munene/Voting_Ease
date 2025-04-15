@@ -4,6 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <termios.h> // For hiding password input
 
 #define MAX_C 10
 
@@ -27,7 +28,6 @@ void displayPostVoteMenu();
 void displayVotingInterface();
 void displayResults();
 void saveResultsToFile();
-void loadCandidatesFromFile();
 void saveCandidatesToFile();
 void handleFileError(FILE *, const char *);
 void printHeader(const char *, const char *);
@@ -36,9 +36,12 @@ void setColor(int);
 int getValidInteger(int, int);
 void clearInputBuffer();
 int isAlpha(const char *);
+void resetCandidates();
+void getPasswordMasked(char *);
 
 int main() {
-    loadCandidatesFromFile();
+    // Candidates will reset every time the program is launched
+    resetCandidates();
     displayWelcomeScreen();
 
     while (1) {
@@ -58,6 +61,12 @@ int main() {
         }
     }
     return 0;
+}
+
+void resetCandidates() {
+    candidateCount = 0;
+    memset(allCandidates, 0, sizeof(allCandidates));
+    strcpy(electionType, "No Election Type Set");
 }
 
 void displayWelcomeScreen() {
@@ -83,11 +92,10 @@ void displayAdminPanel() {
 
     char inputPassword[20];
     printf("Enter password: ");
-    scanf("%s", inputPassword);
-    clearInputBuffer();
+    getPasswordMasked(inputPassword);
 
     if (strcmp(inputPassword, adminPassword) == 0) {
-        printf("Access granted.\n");
+        printf("\nAccess granted.\n");
         sleep(1);
 
         while (1) {
@@ -129,7 +137,7 @@ void displayAdminPanel() {
             }
         }
     } else {
-        printf("Incorrect password! Returning to main menu...\n");
+        printf("\nIncorrect password! Returning to main menu...\n");
         sleep(2);
     }
 }
@@ -176,7 +184,8 @@ void displayVoterMenu() {
     int choice = getValidInteger(1, candidateCount);
 
     allCandidates[choice - 1].votes++;
-    saveCandidatesToFile(); // Save updated vote
+    saveCandidatesToFile();
+    saveResultsToFile(); // Automatically save results after voting
     printf("Thank you for voting!\n");
     sleep(2);
 }
@@ -224,6 +233,7 @@ void saveResultsToFile() {
 }
 
 void saveCandidatesToFile() {
+    // Saving to a dummy file but will not be loaded on restart
     FILE *file = fopen("candidates.dat", "wb");
     if (!file) {
         handleFileError(file, "Could not save candidates.");
@@ -231,15 +241,6 @@ void saveCandidatesToFile() {
     }
     fwrite(&candidateCount, sizeof(int), 1, file);
     fwrite(allCandidates, sizeof(Candidate), candidateCount, file);
-    fclose(file);
-}
-
-void loadCandidatesFromFile() {
-    FILE *file = fopen("candidates.dat", "rb");
-    if (!file) return;
-
-    fread(&candidateCount, sizeof(int), 1, file);
-    fread(allCandidates, sizeof(Candidate), candidateCount, file);
     fclose(file);
 }
 
@@ -292,4 +293,30 @@ int isAlpha(const char *str) {
         if (!isalpha(str[i])) return 0;
     }
     return 1;
+}
+
+void getPasswordMasked(char *password) {
+    struct termios oldt, newt;
+    int i = 0;
+    char ch;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    while ((ch = getchar()) != '\n' && i < 19) {
+        if (ch == 127 || ch == 8) { // Handle backspace
+            if (i > 0) {
+                i--;
+                printf("\b \b");
+            }
+        } else {
+            password[i++] = ch;
+            printf("*");
+        }
+    }
+    password[i] = '\0';
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 }

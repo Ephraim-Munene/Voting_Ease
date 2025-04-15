@@ -1,9 +1,0 @@
-Candidate: John Makini, Symbol: !
-Candidate: Flavian Oeri, Symbol: @
-Candidate: Angellicah Anita, Symbol: #
-Candidate: John, Symbol: !
-Candidate: Jane, Symbol: @
-Candidate: Paul, Symbol: !
-Candidate: Angela, Symbol: @
-Candidate: paul, Symbol: !
-Candidate: angel, Symbol: @
