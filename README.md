@@ -19,7 +19,7 @@ Manage elections easily with voter and admin panels, secured by a password-prote
 
 | File            | Purpose                        |
 |-----------------|---------------------------------|
-| `vote_ease.c`   | Main source code                |
+| `vote_ui.c`   | Main source code                |
 | `voting_results.txt` | Auto-generated voting results |
 | `candidates.dat` | Saved candidate data            |
 
