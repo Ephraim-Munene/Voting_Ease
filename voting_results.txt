@@ -1,3 +1,3 @@
 -----VOTING RESULTS-----
-Candidate: Ryan, Party: ASS, Votes: 2
-Candidate: James, Party: BBL, Votes: 0
+Candidate: Peter, Party: AB, Votes: 1
+Candidate: John , Party: DC, Votes: 2
