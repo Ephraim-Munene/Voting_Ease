@@ -30,7 +30,7 @@ Manage elections easily with voter and admin panels, secured by a password-prote
 
 1. Open your Linux terminal.
 2. Navigate to your project folder:
-3. run the Voting_ui.c file
+3. run the main.c file
 
 ```bash
 cd path/to/project
